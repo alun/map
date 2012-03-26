@@ -22,3 +22,6 @@ organization := "com.katlex"
 scalaVersion := "2.9.1"
 
 version      := "0.1"
+
+// to use for debug
+//ClosureKeys.prettyPrint in Compile := true

@@ -1,2 +1,2 @@
-Map.js
+globals.js
 com/katlex/Test.js
