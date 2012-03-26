@@ -1,0 +1,1 @@
+seq(coffeeSettings: _*)
