@@ -1,22 +1,33 @@
 import sbt._
 import Keys._
 
-object CopyJsmPlugin extends Plugin {
-  import CopyJsmKeys._
+/**
+ * Helper plugin to build the JS project with coffee-script and closure-compiler plugins
+ */
+object JsBuildPlugin extends Plugin {
+  import JsBuildKeys._
 
-  object CopyJsmKeys {
-    lazy val copyJsm = TaskKey[Seq[File]]("copy-jsm", "Copies JS manifest files")
+  object JsBuildKeys {
+    lazy val copyJsm = TaskKey[Set[File]]("copy-jsm", "Copies JS manifest files")
+    lazy val copyJs = TaskKey[Set[File]]("copy-js", "Copies JS source files")
   }
 
-  def copyJsmSettings: Seq[Setting[_]] = {
-    inConfig(Compile)(Seq(
-    copyJsm <<= (resourceDirectory, target) map {
-      (resourceDir, targetDir) =>
-        val copyTuples = for {
-          manifest <- resourceDir.descendentsExcept("*.jsm", (".*" - ".") || HiddenFileFilter).get
-        } yield (manifest, new File(targetDir / "js", IO.relativize(resourceDir, manifest).get))
-        IO.copy(copyTuples).toSeq
-    }))
+  private def copy(from:File, to:File, extension:String) = IO.copy {
+    println(from, to)
+    for {
+      file <- from.descendentsExcept("*." + extension, (".*" - ".") || HiddenFileFilter).get
+    } yield (file, new File(to, IO.relativize(from, file).get))
+  }
+
+  def jsBuildSettings: Seq[Setting[_]] = inConfig(Compile) {
+    Seq(
+      copyJsm <<= (resourceDirectory in (Compile, copyJsm), target in (Compile, copyJsm)) map { (resourceDir, targetDir) =>
+        copy(resourceDir, targetDir, "jsm")
+      },
+      copyJs <<= (sourceDirectory in (Compile, copyJs), target in (Compile, copyJs)) map { (sourceDir, targetDir) =>
+        copy(sourceDir, targetDir, "js")
+      }
+    )
   }
 
 }
