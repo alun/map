@@ -1,10 +1,17 @@
 <html>
 
 <head>
-	<script type="text/javascript" src="/script/map-raphael-0.1-min.js"></script>
+	<script type="text/javascript" src="/script/map-full-0.1.js"></script>
 </head>
 
 <body>
+
+    <div id="mapContainer" style="width: 100%; height: 100%"></div>
+
+    <script type="text/javascript">
+        com.katlex.Logger.setup({root:com.katlex.Logger.DEBUG});
+        var map = com.katlex.SvgMap.init("mapContainer", "/map.svg");
+    </script>
 </body>
 
 </html>

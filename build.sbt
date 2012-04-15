@@ -10,7 +10,7 @@ seq(closureSettings:_*)
 
 seq(jsBuildSettings:_*)
 
-ClosureKeys.outAppend in (Compile, ClosureKeys.closure) <<= version(v => "%s-min".format(v))
+ClosureKeys.outAppend in (Compile, ClosureKeys.closure) <<= version(v => "%s".format(v))
 
 (resourceManaged in (Compile, CoffeeKeys.coffee)) <<= target(_ / "js")
 
@@ -28,4 +28,4 @@ ClosureKeys.outAppend in (Compile, ClosureKeys.closure) <<= version(v => "%s-min
 (resourceManaged in (Compile, ClosureKeys.closure)) <<= (target in Compile)(x => x)
 
 // to use for debug
-//ClosureKeys.prettyPrint in Compile := true
+ClosureKeys.prettyPrint in Compile := true

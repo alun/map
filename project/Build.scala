@@ -13,7 +13,6 @@ object JsBuildPlugin extends Plugin {
   }
 
   private def copy(from:File, to:File, extension:String) = IO.copy {
-    println(from, to)
     for {
       file <- from.descendentsExcept("*." + extension, (".*" - ".") || HiddenFileFilter).get
     } yield (file, new File(to, IO.relativize(from, file).get))

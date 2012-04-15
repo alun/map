@@ -27,13 +27,12 @@
 
 merge = (source, target, path) ->
   for field, value of source
-    path ?= []
-    path.push field
+    curPath = (path ? []).concat(field)
     if typeof value == "object"
       target[field] ?= {}
-      merge(value, target[field], path)
+      merge value, target[field], curPath
     else
-      console.log "Caution! Overriding " + path.join(".") if target[field]? and console? and console.log?
+      console.log "Caution! Overriding " + curPath.join(".") if target[field]? and console? and console.log?
       target[field] = value
 
 exportGlobals = (packageContent) -> merge packageContent, window
@@ -41,4 +40,5 @@ exportGlobals = (packageContent) -> merge packageContent, window
 # export export function to the window namespace
 exportGlobals {
   exportGlobals: exportGlobals
+  com: katlex: utils: mergeObjects: (source, target) -> merge source, target
 }

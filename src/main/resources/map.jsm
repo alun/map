@@ -1,2 +1,3 @@
 root.js
-com/katlex/Test.js
+com/katlex/Logger.js
+com/katlex/SvgMap.js
