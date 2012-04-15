@@ -14,12 +14,12 @@ class SvgMap
   legalNode = (node) ->
     node? && node.nodeName in ["g", "polygon", "path"]
 
-  highlight = (region) -> ->
-    region.attr
+  highlight = (region) ->
+    @.attr
       fill: "#00FF00"
 
-  resetHighlight = (region) -> ->
-    region.attr
+  resetHighlight = (region) ->
+    @.attr
       fill: "#FFFFFF"
 
   drawSVGNode = (paper, node) ->
@@ -55,12 +55,12 @@ class SvgMap
     @paper.setStart()
     drawSVGNode @paper, node
     region = @paper.setFinish()
-    @resetHighlight(region)()
+    @resetHighlight.call(region)
 
     region.id = node.getAttribute "id"
 
-    region.mouseover @highlight region
-    region.mouseout @resetHighlight region
+    region.mouseover @highlight
+    region.mouseout @resetHighlight
 
     @regions.push region
 
