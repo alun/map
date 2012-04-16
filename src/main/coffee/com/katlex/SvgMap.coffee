@@ -1,26 +1,18 @@
+$ = jQuery
+
 class SvgMap
-  $ = jQuery
+  merge = com.katlex.utils.mergeObjects
   logger = com.katlex.Logger.create("com.katlex.SvgMap")
 
-  @init: (container, mapDataUrl) ->
+  @init: (container, mapDataUrl, behaviorOverride) ->
     logger.debug "Initializing"
     map = new SvgMap(container)
     map.loadData(mapDataUrl)
+    merge map.behavior, behaviorOverride if behaviorOverride?
     map
-
-  initialTransform = (xml) ->
-    ($ "#Subjects_Outline", xml)[0]
 
   legalNode = (node) ->
     node? && node.nodeName in ["g", "polygon", "path"]
-
-  highlight = (region) ->
-    @.attr
-      fill: "#00FF00"
-
-  resetHighlight = (region) ->
-    @.attr
-      fill: "#FFFFFF"
 
   drawSVGNode = (paper, node) ->
     if node.nodeName == "polygon"
@@ -33,9 +25,8 @@ class SvgMap
 
   constructor: (containerId) ->
     logger.debug "Construction"
-    @initialTransform = initialTransform
-    @highlight = highlight
-    @resetHighlight = resetHighlight
+    @behavior = {}
+    merge @behavior, defaultBehavior
 
     container = $("#" + containerId)
     @paper = Raphael(containerId, container.width(), container.height())
@@ -43,7 +34,7 @@ class SvgMap
   loadData: (dataUrl) ->
     logger.debug "Loading data"
     # async load map SVG file
-    $.get dataUrl, (data) => @drawRegions @initialTransform(data)
+    $.get dataUrl, (data) => @drawRegions @behavior.initialTransform(data)
 
   drawRegions: (xml) ->
     for node in xml.childNodes
@@ -55,13 +46,19 @@ class SvgMap
     @paper.setStart()
     drawSVGNode @paper, node
     region = @paper.setFinish()
-    @resetHighlight.call(region)
+    region.attr @behavior.resetHighlight
 
     region.id = node.getAttribute "id"
 
-    region.mouseover @highlight
-    region.mouseout @resetHighlight
+    map = this
+    region.mouseover () -> @.attr map.behavior.highlight
+    region.mouseout () -> @.attr map.behavior.resetHighlight
 
     @regions.push region
+    
+defaultBehavior =
+  highlight: fill: "#00FF00"
+  resetHighlight: fill: "#FFFFFF"
+  initialTransform: ($ "#Subjects_Outline", xml)[0]
 
 exportGlobals com: katlex: SvgMap: SvgMap
