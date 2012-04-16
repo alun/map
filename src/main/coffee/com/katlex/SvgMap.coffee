@@ -8,7 +8,7 @@ class SvgMap
     logger.debug "Initializing"
     map = new SvgMap(container)
     map.loadData(mapDataUrl)
-    merge map.behavior, behaviorOverride if behaviorOverride?
+    merge behaviorOverridem, map.behavior if behaviorOverride?
     map
 
   legalNode = (node) ->
@@ -26,7 +26,7 @@ class SvgMap
   constructor: (containerId) ->
     logger.debug "Construction"
     @behavior = {}
-    merge @behavior, defaultBehavior
+    merge defaultBehavior, @behavior
 
     container = $("#" + containerId)
     @paper = Raphael(containerId, container.width(), container.height())
@@ -57,8 +57,8 @@ class SvgMap
     @regions.push region
     
 defaultBehavior =
-  highlight: fill: "#00FF00"
+  highlight: fill: "#0000FF"
   resetHighlight: fill: "#FFFFFF"
-  initialTransform: ($ "#Subjects_Outline", xml)[0]
+  initialTransform: (xml) -> ($ "#Subjects_Outline", xml)[0]
 
 exportGlobals com: katlex: SvgMap: SvgMap

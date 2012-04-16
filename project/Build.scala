@@ -1,5 +1,6 @@
 import sbt._
 import Keys._
+import java.io.File
 
 /**
  * Helper plugin to build the JS project with coffee-script and closure-compiler plugins
@@ -12,7 +13,9 @@ object JsBuildPlugin extends Plugin {
     lazy val copyJs = TaskKey[Set[File]]("copy-js", "Copies JS source files")
   }
 
-  private def copy(from:File, to:File, extension:String) = IO.copy {
+  private def copyOverwrite(source: Traversable[(File, File)]) = IO.copy(source, true)
+
+  private def copy(from:File, to:File, extension:String) = copyOverwrite {
     for {
       file <- from.descendentsExcept("*." + extension, (".*" - ".") || HiddenFileFilter).get
     } yield (file, new File(to, IO.relativize(from, file).get))
