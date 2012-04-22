@@ -36,6 +36,7 @@ class SvgMap
       @drawRegions @behavior.initialTransform(data)
       @setViewToWholeMap()
       @setupDragLogic()
+      @setupZoomLogic()
 
   setViewToWholeMap: ->
     mapBBox = @wholeMap.getBBox()
@@ -87,6 +88,11 @@ class SvgMap
         lastPoint = newPoint
       else
         @dragging = false
+
+  setupZoomLogic: ->
+    mapSvg = $ @container[0].childNodes[0]
+    mapSvg.mousewheel (e, delta) ->
+      console.log delta
 
   drawRegions: (xml) ->
     @wholeMap = @paper.set()
