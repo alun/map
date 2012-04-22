@@ -34,7 +34,26 @@ class SvgMap
     # async load map SVG file
     $.get dataUrl, (data) =>
       @drawRegions @behavior.initialTransform(data)
+      @setViewToWholeMap()
       @setupDragLogic()
+
+  setViewToWholeMap: ->
+    mapBBox = @wholeMap.getBBox()
+    kw = @viewBox.width / mapBBox.width
+    kh = @viewBox.width / mapBBox.height
+    k = if kw < kh then kw else kh
+
+    @viewBox.width /= k
+    @viewBox.height /= k
+
+    @viewBox.topLeft.x = mapBBox.x + (mapBBox.width - @viewBox.width) / 2
+    @viewBox.topLeft.y = mapBBox.y + (mapBBox.height - @viewBox.height) / 2
+
+    @applyViewBox()
+
+  applyViewBox: ->
+    tl = @viewBox.topLeft
+    @paper.setViewBox tl.x, tl.y, @viewBox.width, @viewBox.height, true
 
   setupDragLogic: ->
     @dragging = false
@@ -64,15 +83,15 @@ class SvgMap
         newPoint = point(e)
         offset = newPoint.subtract(lastPoint)
         @viewBox.topLeft = @viewBox.topLeft.subtract(offset)
-        tl = @viewBox.topLeft
-        @paper.setViewBox tl.x, tl.y, @viewBox.width, @viewBox.height
+        @applyViewBox()
         lastPoint = newPoint
       else
         @dragging = false
 
   drawRegions: (xml) ->
+    @wholeMap = @paper.set()
     for node in xml.childNodes
-      @drawRegion node if legalNode node
+      @wholeMap.push @drawRegion node if legalNode node
 
   drawRegion: (node) ->
     @regions ?= []
@@ -88,6 +107,7 @@ class SvgMap
     region.mouseout @regionHighlightResetter(region)
 
     @regions.push region
+    region
 
   drawSVGNode: (node, region) ->
     if node.nodeName == "polygon"
