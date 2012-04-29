@@ -32,23 +32,28 @@ class SvgMap
   loadData: (dataUrl) ->
     logger.debug "Loading data"
     # async load map SVG file
-    $.get dataUrl, (data) =>
+    r = $.ajax url: dataUrl, type: "GET"
+    r.done (data) =>
       @drawRegions @behavior.initialTransform(data)
       @setViewToWholeMap()
       @setupDragLogic()
       @setupZoomLogic()
+    r.fail (jqXHR, textStatus) =>
+      logger.fatal "SVG file couldn't be loaded"
 
   setViewToWholeMap: ->
     mapBBox = @wholeMap.getBBox()
     kw = @viewBox.width / mapBBox.width
-    kh = @viewBox.width / mapBBox.height
+    kh = @viewBox.height / mapBBox.height
     k = if kw < kh then kw else kh
 
     @viewBox.width /= k
     @viewBox.height /= k
 
-    @viewBox.topLeft.x = mapBBox.x + (mapBBox.width - @viewBox.width) / 2
-    @viewBox.topLeft.y = mapBBox.y + (mapBBox.height - @viewBox.height) / 2
+    v1 = new Point(mapBBox.x, mapBBox.y)
+    v2 = new Point(mapBBox.width, mapBBox.height)
+    v3 = new Point(@viewBox.width, @viewBox.height)
+    @viewBox.topLeft = v1.add (v2.subtract v3).scale 1/2
 
     @applyViewBox()
 
@@ -82,7 +87,7 @@ class SvgMap
 
       if lastPoint
         newPoint = point(e)
-        offset = newPoint.subtract(lastPoint)
+        offset = newPoint.subtract(lastPoint).scale(@viewBox.width / @container.width())
         @viewBox.topLeft = @viewBox.topLeft.subtract(offset)
         @applyViewBox()
         lastPoint = newPoint
