@@ -41,7 +41,7 @@
             }
         });
 
-        map = Map.init(mapContainer, "/map.svg", {
+        map = Map.init(mapContainer, "map.svg", {
             resetHighlight: {
                 fill: "#ffe9e6",
                 stroke: "#dfcecc",
