@@ -23,6 +23,9 @@ class SvgMap
     @behavior = {}
     mergeObjects defaultBehavior, @behavior
 
+    @regionHint = $ "#" + @behavior.regionHintId
+    @regionHint.css(position: "absolute").hide()
+
     @container = $("#" + containerId)
     @paper = Raphael(containerId, @container.width(), @container.height())
 
@@ -135,6 +138,7 @@ class SvgMap
     region.id = node.getAttribute "id"
 
     C = @behavior
+    region.mousemove @regionMouseMoveHandler(region)
     region.mouseover @regionMouseOverHandler(region)
     region.mouseout @regionMouseOutHanler(region)
     region.click @regionClickHandler(region)
@@ -156,13 +160,19 @@ class SvgMap
       for childNode in node.childNodes
         @drawSVGNode childNode, region if legalNode childNode
 
+  regionMouseMoveHandler: (region) ->
+    (e) => @regionHint.css(left: e.pageX + 30, top: e.pageY - 30).show().
+                       text(@behavior.regionHintTextFunction(region.id))
+
   regionMouseOverHandler: (region) ->
     C = @behavior
     => region.animate C.highlight, 5000 / C.colorAnimationSpeed if !@dragging
 
   regionMouseOutHanler: (region) ->
     C = @behavior
-    => region.animate C.resetHighlight, 5000 / C.colorAnimationSpeed
+    =>
+      @regionHint.hide()
+      region.animate C.resetHighlight, 5000 / C.colorAnimationSpeed
 
   regionClickHandler: (region) ->
     (e) => eve SvgMap.CLICK, region, region.id
@@ -177,5 +187,7 @@ defaultBehavior =
   zoomMax: 4
   zoomEnabled: true
   dragEnabled: true
+  regionHintId: "regionHint"
+  regionHintTextFunction: (x) -> "-" + x + "-"
 
 exportGlobals com: katlex: SvgMap: SvgMap
