@@ -17,6 +17,33 @@
         }
 
         #ymapContainer {
+            background: #ffffff;
+        }
+
+        #locations {
+            width: 200px;
+            float: left;
+            list-style: none;
+            padding-left: 0px;
+            margin: 0px;
+        }
+
+        #locations li {
+            width: 100%;
+            padding: 10px;
+        }
+
+        #locations li:hover {
+            background: #eee;
+        }
+
+        #ymap {
+            width: 600px;
+            height: 600px;
+            float: right;
+        }
+
+        #ymapContainer {
             display: none;
         }
 
@@ -40,7 +67,17 @@
 
     <div id="outer" style="width:100%">
         <div id="mapContainer"></div>
-        <div id="ymapContainer"></div>
+        <div id="ymapContainer">
+            <ul id="locations">
+                <li>
+                    <div class="name"></div>
+                    <div class="address"></div>
+                    <div class="phone"></div>
+                    <a class="url">Сайт</a>
+                </li>
+            </ul>
+            <div id="ymap"></div>
+        </div>
         <div id="regionHint"></div>
     </div>
 
