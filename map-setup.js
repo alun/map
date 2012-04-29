@@ -14,7 +14,7 @@
         }
     });
 
-    map = Map.init("mapContainer", "/map.svg");
+    map = Map.init("mapContainer", "map.svg");
 
     eve.on(Map.CLICK, clickHandler);
 
