@@ -2,23 +2,29 @@
 <html>
 
 <head>
-	<script type="text/javascript" src="/script/map-full-0.1.js"></script>
+	<script type="text/javascript" src="script/map-full-0.1.js"></script>
+    <script src="http://api-maps.yandex.ru/2.0/?load=package.full&lang=ru-RU"
+            type="text/javascript"></script>
     <style type="text/css">
-        #mapContainer {
+        #mapContainer, #ymapContainer {
             width: 800px;
             height: 600px;
             position: absolute;
             left:50%;
             top:50%;
             margin:-300px 0 0 -400px;
-            background: #ddf;
+            background: #cadfff;
+        }
+
+        #ymapContainer {
+            display: none;
         }
 
         #regionHint {
             padding: 5px;
             background: #000;
             color: #fff;
-            /*display: none;*/
+            display: none;
         }
 
     </style>
@@ -28,6 +34,7 @@
 
     <div id="outer" style="width:100%">
         <div id="mapContainer"></div>
+        <div id="ymapContainer"></div>
         <div id="regionHint"></div>
     </div>
 
