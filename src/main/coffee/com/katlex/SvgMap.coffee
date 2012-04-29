@@ -6,6 +6,8 @@ mergeObjects = com.katlex.utils.mergeObjects
 class SvgMap
   logger = Logger.create("com.katlex.SvgMap")
 
+  @CLICK = "com.katlex.SVGMap.Click"
+
   @init: (container, mapDataUrl, behaviorOverride) ->
     logger.debug "Initializing"
     map = new SvgMap(container)
@@ -62,6 +64,7 @@ class SvgMap
     @paper.setViewBox tl.x, tl.y, @viewBox.width, @viewBox.height, true
 
   setupDragLogic: ->
+    return if !@behavior.dragEnabled
     @dragging = false
     lastPoint = null
     mapSvg = $ @container[0].childNodes[0]
@@ -72,13 +75,13 @@ class SvgMap
       lastPoint = point(e)
       @dragging = true
       elem = curElem(e)
-      (@regionHighlightResetter elem.region)() if elem
+      (@regionMouseOutHanler elem.region)() if elem
 
     mapSvg.mouseup (e) => if e.which == 1
       lastPoint = null
       @dragging = false
       elem = curElem(e)
-      (@regionHighlighter elem.region)() if elem
+      (@regionMouseOverHandler elem.region)() if elem
 
     mapSvg.mousemove (e) =>
       lastPoint = null if ($.browser.msie && document.documentMode < 9 && e.button == 0)
@@ -95,9 +98,27 @@ class SvgMap
         @dragging = false
 
   setupZoomLogic: ->
+    return if !@behavior.zoomEnabled
     mapSvg = $ @container[0].childNodes[0]
-    mapSvg.mousewheel (e, delta) ->
-      console.log delta
+    step = @behavior.zoomStep
+    mapSvg.mousewheel (e, delta) =>
+      e = e.originalEvent
+      pw = (e.offsetX || e.layerX) / @container.width()
+      ph = (e.offsetY || e.layerY) / @container.height()
+
+      zoomPixels = - step * delta
+
+      k = @viewBox.height / @viewBox.width
+      newWidth = @viewBox.width + zoomPixels
+      newHeight = k * newWidth
+      zoom = @container.width() / newWidth
+
+      if newWidth > 0 && zoom < @behavior.zoomMax && zoom > @behavior.zoomMin
+        offset = new Point(pw * (@viewBox.width - newWidth), ph * (@viewBox.height - newHeight))
+        @viewBox.topLeft = @viewBox.topLeft.add(offset)
+        @viewBox.width = newWidth
+        @viewBox.height = newHeight
+        @applyViewBox()
 
   drawRegions: (xml) ->
     @wholeMap = @paper.set()
@@ -114,8 +135,9 @@ class SvgMap
     region.id = node.getAttribute "id"
 
     C = @behavior
-    region.mouseover @regionHighlighter(region)
-    region.mouseout @regionHighlightResetter(region)
+    region.mouseover @regionMouseOverHandler(region)
+    region.mouseout @regionMouseOutHanler(region)
+    region.click @regionClickHandler(region)
 
     @regions.push region
     region
@@ -134,18 +156,26 @@ class SvgMap
       for childNode in node.childNodes
         @drawSVGNode childNode, region if legalNode childNode
 
-  regionHighlighter: (region) ->
+  regionMouseOverHandler: (region) ->
     C = @behavior
     => region.animate C.highlight, 5000 / C.colorAnimationSpeed if !@dragging
 
-  regionHighlightResetter: (region) ->
+  regionMouseOutHanler: (region) ->
     C = @behavior
     => region.animate C.resetHighlight, 5000 / C.colorAnimationSpeed
+
+  regionClickHandler: (region) ->
+    (e) => eve SvgMap.CLICK, region, region.id
 
 defaultBehavior =
   highlight: fill: "#00FF00"
   resetHighlight: fill: "#FFFFFF"
   initialTransform: (xml) -> ($ "#Subjects_Outline", xml)[0]
   colorAnimationSpeed: 20
+  zoomStep: 50
+  zoomMin: 0.77
+  zoomMax: 4
+  zoomEnabled: true
+  dragEnabled: true
 
 exportGlobals com: katlex: SvgMap: SvgMap

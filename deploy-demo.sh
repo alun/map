@@ -9,3 +9,4 @@ fi
 
 $scp target/map-full-0.1.js clodo:map/script
 $scp web/index.html clodo:map
+$scp web/map-setup.js clodo:map
