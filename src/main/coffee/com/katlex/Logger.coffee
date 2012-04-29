@@ -1,11 +1,12 @@
 class Logger
-  Level = (name, value) -> name: name, value: value
+  class Level
+    constructor: (@name, @value) ->
 
-  @DEBUG:     Level("DEBUG", 0)
-  @INFO:      Level("INFO", 1)
-  @WARNING:   Level("WARNING", 2)
-  @ERROR:     Level("ERROR", 3)
-  @FATAL:     Level("FATAL", 4)
+  @DEBUG:     new Level("DEBUG", 0)
+  @INFO:      new Level("INFO", 1)
+  @WARNING:   new Level("WARNING", 2)
+  @ERROR:     new Level("ERROR", 3)
+  @FATAL:     new Level("FATAL", 4)
 
   conf = root: Logger.FATAL
 
@@ -14,7 +15,7 @@ class Logger
     console.log [now, "[" + levelName + "]", loggerName, "-", msg].join(" ") if console? && console.log?
 
   @create: (name) -> new Logger(name)
-  @setup: (newConf) -> com.katlex.utils.mergeObjects conf, newConf
+  @setup: (newConf) -> com.katlex.utils.mergeObjects newConf, conf, (v) -> v instanceof Level
 
   constructor: (name) -> @name = name.split(".")
 
@@ -27,10 +28,12 @@ class Logger
   log: (level, msg) -> realLog(level.name, @name.join("."), msg) if @hasLevel(level)
 
   hasLevel: (level) ->
-    minLevel = conf.root
+    confVisitor = conf
+    minLevel = confVisitor.root
     for part in @name
-      if !conf[part] then break
-      minLevel = conf[part]
+      confVisitor = confVisitor[part]
+      if !confVisitor then break
+      minLevel = confVisitor if confVisitor instanceof Level
     level.value >= minLevel.value
 
 exportGlobals com: katlex: Logger: Logger
