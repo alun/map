@@ -2,39 +2,26 @@
 
     var regionData,
         mapReady = false,
-        regionsUrl = "partners/geo/ajax.region.handler.php",
-        storesUrl = "partners/geo/ajax.distributor.handler.php",
+        regionsUrl  = "/partners/geo/ajax.region.handler.php",
+        storesUrl   = "/partners/geo/ajax.distributor.handler.php",
         defaultZoom = 5;
 
     $.get(regionsUrl, function(data) {
-        var rawData = eval(data),
-            rawDataItem,
-            i,
-            total = rawData.length,
-            parsedData = {};
-
-        for (i = 0; i < total; ++i) {
-            rawDataItem = rawData[i];
+        var parsedData = {};
+        $.each(eval(data), function(i, rawDataItem) {
             parsedData[rawDataItem.c] = {
                 id: rawDataItem.id,
                 name: rawDataItem.n
             };
-        }
-
+        });
         regionData = parsedData;
         init();
     });
 
     function loadLocations(regionId, callback) {
         $.get(storesUrl + "?region=" + regionId, function(data) {
-            var rawData = eval(data),
-                rawDataItem,
-                i,
-                total = rawData.length;
-
-            for (i = 0; i < total; ++i) {
-                rawDataItem = rawData[i];
-                if (callback) {
+            if (callback) {
+                $.each(eval(data), function(i, rawDataItem) {
                     callback({
                         name: rawDataItem.n,
                         point: $.map(rawDataItem.p.split(","), function(e) { return parseFloat(e); }),
@@ -42,7 +29,7 @@
                         phone: rawDataItem.ph,
                         url: rawDataItem.u
                     });
-                }
+                });
             }
         });
     }
@@ -82,11 +69,16 @@
             $(ymapContainerId).show();
             locations.empty();
 
+            if (yandexMap) {
+                yandexMap.geoObjects.each(function (e) {
+                    yandexMap.geoObjects.remove(e);
+                });
+            }
+
             ymaps.geocode(regionData[code].name, {results: 1}).then(function (res) {
 
                 var location = res.geoObjects.get(0),
-                    latLon = location ? location.geometry.getCoordinates() : null,
-                    oldGeoObjects = [];
+                    latLon = location ? location.geometry.getCoordinates() : null;
 
                 if (!yandexMap) {
                     yandexMap = new ymaps.Map("ymap", {
@@ -103,13 +95,6 @@
                 } else {
                     yandexMap.setCenter(latLon, defaultZoom);
                 }
-
-                yandexMap.geoObjects.each(function (e) {
-                    oldGeoObjects.push(e);
-                });
-                $.each(oldGeoObjects, function (e) {
-                    yandexMap.geoObjects.remove(e);
-                });
 
                 if (regionData[code]) {
                     loadLocations(regionData[code].id, function(location) {

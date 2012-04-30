@@ -34,4 +34,4 @@ watchSources ~= { sources =>
 (resourceManaged in (Compile, ClosureKeys.closure)) <<= (target in Compile)(x => x)
 
 // to use for debug
-ClosureKeys.prettyPrint in Compile := true
+//ClosureKeys.prettyPrint in Compile := true
