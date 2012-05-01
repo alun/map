@@ -4,9 +4,10 @@
         mapReady = false,
         regionsUrl  = "/partners/geo/ajax.region.handler.php",
         storesUrl   = "/partners/geo/ajax.distributor.handler.php",
-        defaultZoom = 5;
+        defaultZoom = 5,
+        regionHint = $("#regionHint");
 
-    $("#regionHint").appendTo($("body"));
+    regionHint.appendTo($("body")).css({position: "absolute"});
 
     $.get(regionsUrl, function(data) {
         var parsedData = {};
@@ -137,17 +138,44 @@
             });
         }
 
+        // MapSWF initialization
+
         var container = $(mapContainerId),
             params = {
                 wmode: "transparent"
             },
-            flashVars = {
-                svgFile: "map.svg"
+            settings = {
+                svgFile: "map.svg",
+                fillColor: 0xffe9e6,
+                lineWidth: 0.5,
+                lineColor: 0xdfcecc,
+                tintColor: 0xff0000,
+                tintStrength: 0.1
             };
+
+        container.mousemove(function(e) {
+            regionHint.css({
+                left: e.pageX + 10,
+                top: e.pageY - 30
+            });
+        });
+
+        window.MapSWF_Callback = {
+            showTooltip: function (code) {
+                regionHint.text(regionData[code].name).show();
+            },
+            hideTooltip: function () {
+                regionHint.hide();
+            },
+            regionClick: function (code) {
+                MapSWF_Callback.hideTooltip();
+                regionClickHandler(code);
+            }
+        };
 
         $('<div id="mapSwf"/>').appendTo(container);
         swfobject.embedSWF("map.swf", "mapSwf", container.width(), container.height(),
-            "9.0.0", "expressInstall.swf", flashVars, params);
+            "9.0.0", "expressInstall.swf", settings, params);
 /*
         var Logger = com.katlex.Logger,
             Map = com.katlex.SvgMap;

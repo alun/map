@@ -5,6 +5,8 @@ import flash.display.StageAlign;
 import flash.display.StageScaleMode;
 import flash.events.Event;
 import flash.events.IOErrorEvent;
+import flash.events.MouseEvent;
+import flash.external.ExternalInterface;
 import flash.geom.Rectangle;
 import flash.net.URLLoader;
 import flash.net.URLRequest;
@@ -35,13 +37,13 @@ public class Map extends MovieClip {
             svgFile:String = params.svgFile || "map.svg";
 
         _style = new DrawingStyle(
-            params.fillColor || 0xffffff, // 0xffe9e6
-            params.lineWidth || 1, // 0.5
-            params.lineColor || 0 // 0xdfcecc
+            params.fillColor || 0xffffff,
+            params.lineColor || 0,
+            params.lineWidth || 1
         );
         _tintStyle = new TintStyle(
-            params.tintColor || 0x00ff00, // 0xff0000
-            params.tintStrength || 0.5 // 0.1
+            params.tintColor || 0x00ff00,
+            params.tintStrength || 0.5
         )
 
         EventContext.bindOnce(loader, Event.COMPLETE, function():void {
@@ -57,9 +59,31 @@ public class Map extends MovieClip {
         for each (var regionSvg:XML in toRegionsList(svg)) {
             var region:Region = Region.fromSvgNode(regionSvg, _style, _tintStyle);
             _regions[region.code] = region;
+            region.addEventListener(MouseEvent.ROLL_OVER, regionRollOver);
+            region.addEventListener(MouseEvent.ROLL_OUT, regionRollOut);
+            region.addEventListener(MouseEvent.CLICK, regionClick);
             _pane.addChild(region);
         }
         paneToCenter();
+    }
+
+    protected function regionRollOver(e:MouseEvent):void {
+        var region:Region = e.currentTarget as Region;
+        ExternalInterface.call(callback("showTooltip"), region.code);
+    }
+
+    protected function regionRollOut(e:MouseEvent):void {
+        var region:Region = e.currentTarget as Region;
+        ExternalInterface.call(callback("hideTooltip"));
+    }
+
+    protected function regionClick(e:MouseEvent):void {
+        var region:Region = e.currentTarget as Region;
+        ExternalInterface.call(callback("regionClick"), region.code);
+    }
+
+    protected function callback(name:String):String {
+        return ["MapSWF_Callback", name].join(".");
     }
 
     protected function toRegionsList(svg:XML):XMLList {
