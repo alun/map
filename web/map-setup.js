@@ -21,10 +21,13 @@
         init();
     });
 
-    function loadLocations(regionId, callback) {
+    function loadLocations(regionId, callback, emptyCallback) {
         $.get(storesUrl + "?region=" + regionId, function(data) {
-            if (callback) {
-                $.each(eval(data), function(i, rawDataItem) {
+            var dataItems = eval(data);
+            if (dataItems.length == 0 && emptyCallback) {
+                emptyCallback();
+            } else if (callback) {
+                $.each(dataItems, function(i, rawDataItem) {
                     callback({
                         name: rawDataItem.n,
                         point: $.map(rawDataItem.p.split(","), function(e) { return parseFloat(e); }),
@@ -54,6 +57,7 @@
             locations = $("#locations"),
             locationTemplate = locations.find(":first"),
             backToRegion = $("#backToRegion"),
+            noStoresHint = $("#noStoresHint"),
             yandexMap,
             balloonLayout = ymaps.templateLayoutFactory.createClass(
                 '<h3>$[properties.name]</h3>' +
@@ -74,6 +78,7 @@
 
         function regionClickHandler(code) {
             backToRegion.show();
+            noStoresHint.hide();
             $(mapContainerId).hide();
             $(ymapContainerId).show();
             locations.empty();
@@ -156,6 +161,8 @@
                         t.click(activate);
                         locations.append(t);
                         deactivators.push(deactivate);
+                    }, function() {
+                        noStoresHint.show();
                     });
                 }
 
