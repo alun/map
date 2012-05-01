@@ -1,6 +1,5 @@
 package {
 import flash.display.MovieClip;
-import flash.display.Shape;
 import flash.display.Sprite;
 import flash.display.StageAlign;
 import flash.display.StageScaleMode;
@@ -12,8 +11,11 @@ import flash.net.URLRequest;
 
 public class Map extends MovieClip {
 
-    protected var _regions:Object = {};
-    protected var _pane:Sprite = new Sprite();
+    protected var
+        _regions:Object = {},
+        _pane:Sprite = new Sprite(),
+        _style:DrawingStyle,
+        _tintStyle:TintStyle;
 
     public function Map() {
         addChild(_pane);
@@ -32,6 +34,16 @@ public class Map extends MovieClip {
             loader:URLLoader = new URLLoader(),
             svgFile:String = params.svgFile || "map.svg";
 
+        _style = new DrawingStyle(
+            params.fillColor || 0xffffff, // 0xffe9e6
+            params.lineWidth || 1, // 0.5
+            params.lineColor || 0 // 0xdfcecc
+        );
+        _tintStyle = new TintStyle(
+            params.tintColor || 0x00ff00, // 0xff0000
+            params.tintStrength || 0.5 // 0.1
+        )
+
         EventContext.bindOnce(loader, Event.COMPLETE, function():void {
             drawFromSVG(XML(loader.data));
         }).link(
@@ -43,7 +55,7 @@ public class Map extends MovieClip {
 
     protected function drawFromSVG(svg:XML):void {
         for each (var regionSvg:XML in toRegionsList(svg)) {
-            var region:Region = Region.fromSvgNode(regionSvg);
+            var region:Region = Region.fromSvgNode(regionSvg, _style, _tintStyle);
             _regions[region.code] = region;
             _pane.addChild(region);
         }
