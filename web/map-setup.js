@@ -54,7 +54,15 @@
             locations = $("#locations"),
             locationTemplate = locations.find(":first"),
             backToRegion = $("#backToRegion"),
-            yandexMap;
+            yandexMap,
+            balloonLayout = ymaps.templateLayoutFactory.createClass(
+                '<h3>$[properties.name]</h3>' +
+                    '<p>$[properties.address]</p>' +
+                    '<p>$[properties.phone]</p>' +
+                    '<a href="$[properties.url]">Сайт</a>'
+            );
+
+        ymaps.layout.storage.add('my#superlayout', balloonLayout);
 
         $(ymapContainerId).hide();
 
@@ -98,47 +106,63 @@
                 }
 
                 if (regionData[code]) {
+                    var deactivators = [];
                     loadLocations(regionData[code].id, function(location) {
                         var t = locationTemplate.clone(),
-                            mapPoint = new ymaps.GeoObject({
-                                geometry: {
-                                    type: "Point",
-                                    coordinates: location.point
-                                },
-                                properties: {
-                                    balloonContentHeader: location.name
-                                }
-                            });
+                            activePreset = "twirl#greenIcon",
+                            passivePreset = "twirl#lightblueIcon",
+                            active = false,
+                            placemark;
 
                         t.find(".name").text(location.name);
                         t.find(".address").text(location.address);
                         t.find(".phone").text(location.phone);
                         t.find(".url").attr("href", location.url);
 
-                        function activate() {
-                            locations.find("> *").removeClass("active");
-                            t.addClass("active");
-                        }
-                        function deactivate() {
-                            t.removeClass("active");
+                        function updatePlacemark() {
+                            if (placemark) {
+                                yandexMap.geoObjects.remove(placemark);
+                            }
+                            placemark = new ymaps.Placemark(location.point,
+                                location, { preset : active ? activePreset : passivePreset,
+                                    balloonContentBodyLayout:'my#superlayout' });
+                            placemark.events.add("click", activate);
+                            yandexMap.geoObjects.add(placemark);
                         }
 
-                        t.click(function() {
-                            yandexMap.setCenter(location.point, defaultZoom);
-                            mapPoint.balloon.open(location.point);
-                            activate();
-                        });
+                        function activate() {
+                            $.each(deactivators, function(i, f) {
+                                f();
+                            });
+
+                            if (!active) {
+                                active = true;
+                                updatePlacemark();
+
+                                t.addClass("active");
+                            }
+                            placemark.balloon.open();
+                        }
+                        function deactivate() {
+                            if (active) {
+                                active = false;
+                                updatePlacemark();
+                                t.removeClass("active");
+                            }
+                        }
+
+                        updatePlacemark();
+
+                        t.click(activate);
                         locations.append(t);
-                        mapPoint.events.add("click", activate);
-                        mapPoint.balloon.events.add("close", deactivate);
-                        yandexMap.geoObjects.add(mapPoint);
+                        deactivators.push(deactivate);
                     });
                 }
 
             });
         }
 
-        // MapSWF initialization
+        // Region selector initialization
 
         var container = $(mapContainerId),
             params = {
@@ -176,35 +200,6 @@
         $('<div id="mapSwf"/>').appendTo(container);
         swfobject.embedSWF("map.swf", "mapSwf", container.width(), container.height(),
             "9.0.0", "expressInstall.swf", settings, params);
-/*
-        var Logger = com.katlex.Logger,
-            Map = com.katlex.SvgMap;
-
-        Logger.setup({
-            root: Logger.ERROR,
-            com: {
-                katlex: Logger.DEBUG
-            }
-        });
-
-         map = Map.init(mapContainer, "map.svg", {
-            resetHighlight: {
-                fill: "#ffe9e6",
-                stroke: "#dfcecc",
-                "stroke-width": 0.5
-            },
-            highlight: {
-                fill: "#dfc1be"
-            },
-            regionHintTextFunction: function(code) {
-                return (regionData[code] || {name: code}).name;
-            },
-            zoomEnabled: false,
-            dragEnabled: false
-        });
-
-        eve.on(Map.CLICK, regionClickHandler);*/
-
     }
 
     ymaps.ready(initMap);
