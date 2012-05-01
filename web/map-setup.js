@@ -6,6 +6,8 @@
         storesUrl   = "/partners/geo/ajax.distributor.handler.php",
         defaultZoom = 5;
 
+    $("#regionHint").appendTo($("body"));
+
     $.get(regionsUrl, function(data) {
         var parsedData = {};
         $.each(eval(data), function(i, rawDataItem) {
@@ -44,9 +46,7 @@
             return;
         }
 
-        var Logger = com.katlex.Logger,
-            Map = com.katlex.SvgMap,
-            map,
+        var map,
             mapContainer = "mapContainer",
             mapContainerId = "#" + mapContainer,
             ymapContainerId = "#ymapContainer",
@@ -98,26 +98,59 @@
 
                 if (regionData[code]) {
                     loadLocations(regionData[code].id, function(location) {
-                        var t = locationTemplate.clone();
+                        var t = locationTemplate.clone(),
+                            mapPoint = new ymaps.GeoObject({
+                                geometry: {
+                                    type: "Point",
+                                    coordinates: location.point
+                                },
+                                properties: {
+                                    balloonContentHeader: location.name
+                                }
+                            });
+
                         t.find(".name").text(location.name);
                         t.find(".address").text(location.address);
                         t.find(".phone").text(location.phone);
                         t.find(".url").attr("href", location.url);
+
+                        function activate() {
+                            locations.find("> *").removeClass("active");
+                            t.addClass("active");
+                        }
+                        function deactivate() {
+                            t.removeClass("active");
+                        }
+
                         t.click(function() {
                             yandexMap.setCenter(location.point, defaultZoom);
+                            mapPoint.balloon.open(location.point);
+                            activate();
                         });
                         locations.append(t);
-                        yandexMap.geoObjects.add(new ymaps.GeoObject({
-                            geometry: {
-                                type: "Point",
-                                coordinates: location.point
-                            }
-                        }));
+                        mapPoint.events.add("click", activate);
+                        mapPoint.balloon.events.add("close", deactivate);
+                        yandexMap.geoObjects.add(mapPoint);
                     });
                 }
 
             });
         }
+
+        var container = $(mapContainerId),
+            params = {
+                wmode: "transparent"
+            },
+            flashVars = {
+                svgFile: "map.svg"
+            };
+
+        $('<div id="mapSwf"/>').appendTo(container);
+        swfobject.embedSWF("map.swf", "mapSwf", container.width(), container.height(),
+            "9.0.0", "expressInstall.swf", flashVars, params);
+/*
+        var Logger = com.katlex.Logger,
+            Map = com.katlex.SvgMap;
 
         Logger.setup({
             root: Logger.ERROR,
@@ -126,7 +159,7 @@
             }
         });
 
-        map = Map.init(mapContainer, "map.svg", {
+         map = Map.init(mapContainer, "map.svg", {
             resetHighlight: {
                 fill: "#ffe9e6",
                 stroke: "#dfcecc",
@@ -137,10 +170,12 @@
             },
             regionHintTextFunction: function(code) {
                 return (regionData[code] || {name: code}).name;
-            }
+            },
+            zoomEnabled: false,
+            dragEnabled: false
         });
 
-        eve.on(Map.CLICK, regionClickHandler);
+        eve.on(Map.CLICK, regionClickHandler);*/
 
     }
 
