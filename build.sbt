@@ -10,7 +10,7 @@ seq(closureSettings:_*)
 
 seq(jsBuildSettings:_*)
 
-ClosureKeys.outAppend in (Compile, ClosureKeys.closure) <<= version(v => "%s".format(v))
+ClosureKeys.suffix in (Compile, ClosureKeys.closure) <<= version(v => "%s".format(v))
 
 resourceManaged in (Compile, CoffeeKeys.coffee) <<= target(_ / "js")
 
